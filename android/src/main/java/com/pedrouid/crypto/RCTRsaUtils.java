@@ -102,7 +102,7 @@ public class RCTRsaUtils extends ReactContextBaseJavaModule {
     return stringWriter.toString();
   }
 
-  private String jwkToPrivatePkcs1(final ReadableMap jwk) throws Exception {
+  public String jwkToPrivatePkcs1(final ReadableMap jwk) throws Exception {
     BigInteger modulus = toBigInteger(decodeSequence(jwk.getString("n")));
     BigInteger publicExponent = toBigInteger(decodeSequence(jwk.getString("e")));
     BigInteger privateExponent = toBigInteger(decodeSequence(jwk.getString("d")));

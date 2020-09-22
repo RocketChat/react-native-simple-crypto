@@ -105,7 +105,7 @@ public class RCTAes extends ReactContextBaseJavaModule {
 
     final static IvParameterSpec emptyIvSpec = new IvParameterSpec(new byte[] {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00});
 
-    private static String encrypt(String textBase64, String hexKey, String hexIv) throws Exception {
+    public static String encrypt(String textBase64, String hexKey, String hexIv) throws Exception {
         if (textBase64 == null || textBase64.length() == 0) {
             return null;
         }
@@ -119,7 +119,7 @@ public class RCTAes extends ReactContextBaseJavaModule {
         return Base64.encodeToString(encrypted, Base64.NO_WRAP);
     }
 
-    private static String decrypt(String ciphertext, String hexKey, String hexIv) throws Exception {
+    public static String decrypt(String ciphertext, String hexKey, String hexIv) throws Exception {
         if(ciphertext == null || ciphertext.length() == 0) {
             return null;
         }
