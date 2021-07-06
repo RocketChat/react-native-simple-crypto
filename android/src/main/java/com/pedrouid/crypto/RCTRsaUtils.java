@@ -35,6 +35,10 @@ import org.spongycastle.asn1.ASN1Primitive;
 
 public class RCTRsaUtils extends ReactContextBaseJavaModule {
 
+  public RCTRsaUtils(ReactApplicationContext reactContext) {
+    super(reactContext);
+  }
+
   @Override
   public String getName() {
     return "RCTRsaUtils";
