@@ -152,13 +152,13 @@ public class RCTRsaUtils extends ReactContextBaseJavaModule {
 
     WritableMap jwk = Arguments.createMap();
     jwk.putString("n", toString(keyStruct.getModulus(), true));
-    jwk.putString("e", toString(keyStruct.getPublicExponent(), false));
-    jwk.putString("d", toString(keyStruct.getPrivateExponent(), false));
+    jwk.putString("e", toString(keyStruct.getPublicExponent(), true));
+    jwk.putString("d", toString(keyStruct.getPrivateExponent(), true));
     jwk.putString("p", toString(keyStruct.getPrime1(), true));
     jwk.putString("q", toString(keyStruct.getPrime2(), true));
     jwk.putString("dp", toString(keyStruct.getExponent1(), true));
     jwk.putString("dq", toString(keyStruct.getExponent2(), true));
-    jwk.putString("qi", toString(keyStruct.getCoefficient(), false));
+    jwk.putString("qi", toString(keyStruct.getCoefficient(), true));
 
     return jwk;
   }
@@ -178,7 +178,7 @@ public class RCTRsaUtils extends ReactContextBaseJavaModule {
 
   private String toString(BigInteger bigInteger, Boolean positive) {
     byte[] array = bigInteger.toByteArray();
-    if (positive) {
+    if (positive && array[0] == 0) {
       array = Arrays.copyOfRange(array, 1, array.length);
     }
     return Base64.encodeToString(array, Base64.URL_SAFE | Base64.NO_PADDING | Base64.NO_WRAP);
