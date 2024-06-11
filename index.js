@@ -92,6 +92,12 @@ const AES = {
     const keyHex = convertArrayBufferToHex(keyArrayBuffer);
     const ivHex = convertArrayBufferToHex(ivArrayBuffer);
     return convertBase64ToArrayBuffer(await NativeModules.Aes.decrypt(cipherTextBase64, keyHex, ivHex));
+  },
+  encryptFile: async function (filePath, key, iv) {
+    return NativeModules.Aes.encryptFile(filePath, key, iv);
+  },
+  decryptFile: async function (filePath, key, iv) {
+    return NativeModules.Aes.decryptFile(filePath, key, iv);
   }
 };
 

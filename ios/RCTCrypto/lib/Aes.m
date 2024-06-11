@@ -45,4 +45,73 @@
     return [result base64EncodedStringWithOptions:0];
 }
 
++ (NSString *)processFile:(NSString *)filePath
+                operation:(CCOperation)operation
+                     key:(NSString *)keyBase64URL
+                      iv:(NSString *)ivBase64 {
+    NSString *keyBase64 = [Shared base64FromBase64URL:keyBase64URL];
+    NSData *keyData = [[NSData alloc] initWithBase64EncodedString:keyBase64 options:0];
+    NSData *ivData = [[NSData alloc] initWithBase64EncodedString:ivBase64 options:0];
+
+    NSString *normalizedFilePath = [filePath stringByReplacingOccurrencesOfString:@"file://" withString:@""];
+    NSString *outputFileName = [@"processed_" stringByAppendingString:[normalizedFilePath lastPathComponent]];
+    NSString *outputFilePath = [[[normalizedFilePath stringByDeletingLastPathComponent] stringByAppendingPathComponent:outputFileName] stringByDeletingPathExtension];
+    NSInputStream *inputStream = [NSInputStream inputStreamWithFileAtPath:normalizedFilePath];
+    NSOutputStream *outputStream = [NSOutputStream outputStreamToFileAtPath:outputFilePath append:NO];
+    [inputStream open];
+    [outputStream open];
+
+    size_t bufferSize = 4096;
+    uint8_t buffer[bufferSize];
+    CCCryptorRef cryptor = NULL;
+    CCCryptorStatus status = CCCryptorCreateWithMode(operation, kCCModeCTR, kCCAlgorithmAES, ccNoPadding, ivData.bytes, keyData.bytes, keyData.length, NULL, 0, 0, kCCModeOptionCTR_BE, &cryptor);
+    if (status != kCCSuccess) {
+        NSLog(@"Failed to create cryptor: %d", status);
+        return nil;
+    }
+
+    while ([inputStream hasBytesAvailable]) {
+        NSInteger bytesRead = [inputStream read:buffer maxLength:sizeof(buffer)];
+        if (bytesRead > 0) {
+            size_t dataOutMoved;
+            status = CCCryptorUpdate(cryptor, buffer, bytesRead, buffer, bufferSize, &dataOutMoved);
+            if (status == kCCSuccess) {
+                [outputStream write:buffer maxLength:dataOutMoved];
+            } else {
+                NSLog(@"Cryptor update failed: %d", status);
+                break;
+            }
+        }
+    }
+
+    CCCryptorRelease(cryptor);
+    [inputStream close];
+    [outputStream close];
+
+    if (status == kCCSuccess) {
+        if (operation == kCCDecrypt) {
+            NSFileManager *fileManager = [NSFileManager defaultManager];
+            // Overwrite the input file with the decrypted file
+            [fileManager removeItemAtPath:normalizedFilePath error:nil];
+            [fileManager moveItemAtPath:outputFilePath toPath:normalizedFilePath error:nil];
+            return [NSString stringWithFormat:@"file://%@", normalizedFilePath];
+        } else {
+            return [NSString stringWithFormat:@"file://%@", outputFilePath];
+        }
+    } else {
+        // Clean up temp file in case of failure
+        [[NSFileManager defaultManager] removeItemAtPath:outputFilePath error:nil];
+        return nil;
+    }
+}
+
+
++ (NSString *)encryptFile:(NSString *)filePath key:(NSString *)key iv:(NSString *)iv {
+    return [self processFile:filePath operation:kCCEncrypt key:key iv:iv];
+}
+
++ (NSString *)decryptFile:(NSString *)filePath key:(NSString *)key iv:(NSString *)iv {
+    return [self processFile:filePath operation:kCCDecrypt key:key iv:iv];
+}
+
 @end

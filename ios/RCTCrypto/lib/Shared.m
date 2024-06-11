@@ -29,4 +29,16 @@
     return data;
 }
 
++ (NSString *)base64FromBase64URL:(NSString *)base64URL {
+    NSMutableString *base64 = [NSMutableString stringWithString:base64URL];
+    [base64 replaceOccurrencesOfString:@"-" withString:@"+" options:NSLiteralSearch range:NSMakeRange(0, base64.length)];
+    [base64 replaceOccurrencesOfString:@"_" withString:@"/" options:NSLiteralSearch range:NSMakeRange(0, base64.length)];
+    
+    // Pad with '=' to ensure the base64 string length is a multiple of 4
+    while (base64.length % 4 != 0) {
+        [base64 appendString:@"="];
+    }
+    return base64;
+}
+
 @end
