@@ -14,5 +14,5 @@ Pod::Spec.new do |s|
   s.source_files  = "ios/**/*.{h,m,swift}"
 
   s.dependency "React"
-  s.dependency "OpenSSL-Universal"
+  s.dependency "OpenSSL-Universal", "1.1.1100"
 end
