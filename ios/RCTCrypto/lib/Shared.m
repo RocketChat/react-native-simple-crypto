@@ -41,4 +41,61 @@
     return base64;
 }
 
++ (NSString *)calculateFileChecksum:(NSString *)filePath {
+    NSString *normalizedFilePath = [filePath stringByReplacingOccurrencesOfString:@"file://" withString:@""];
+    NSInputStream *inputStream = [NSInputStream inputStreamWithFileAtPath:normalizedFilePath];
+    [inputStream open];
+
+    if (!inputStream) {
+        NSLog(@"Failed to open file: %@", filePath);
+        return nil;
+    }
+
+    CC_SHA256_CTX sha256;
+    CC_SHA256_Init(&sha256);
+
+    uint8_t buffer[4096];
+    NSInteger bytesRead = 0;
+
+    while ((bytesRead = [inputStream read:buffer maxLength:sizeof(buffer)]) > 0) {
+        CC_SHA256_Update(&sha256, buffer, (CC_LONG)bytesRead);
+    }
+
+    [inputStream close];
+
+    if (bytesRead < 0) {
+        NSLog(@"File read error: %@", filePath);
+        return nil;
+    }
+
+    unsigned char hash[CC_SHA256_DIGEST_LENGTH];
+    CC_SHA256_Final(hash, &sha256);
+
+    NSMutableString *checksum = [NSMutableString stringWithCapacity:CC_SHA256_DIGEST_LENGTH * 2];
+    for (int i = 0; i < CC_SHA256_DIGEST_LENGTH; i++) {
+        [checksum appendFormat:@"%02x", hash[i]];
+    }
+
+    return checksum;
+}
+
++ (NSString *)getRandomValues:(NSUInteger)length {
+    static const char alphanumericChars[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+    NSMutableData *randomData = [NSMutableData dataWithLength:length];
+    
+    int result = SecRandomCopyBytes(kSecRandomDefault, length, randomData.mutableBytes);
+    if (result != 0) {
+        return nil;
+    }
+    
+    NSMutableString *randomString = [NSMutableString stringWithCapacity:length];
+    const unsigned char *dataBytes = (const unsigned char *)randomData.bytes;
+    
+    for (NSUInteger i = 0; i < length; i++) {
+        [randomString appendFormat:@"%c", alphanumericChars[dataBytes[i] % (sizeof(alphanumericChars) - 1)]];
+    }
+    
+    return [randomString copy];
+}
+
 @end
