@@ -3,11 +3,48 @@ package com.pedrouid.crypto;
 import android.content.Context;
 import android.net.Uri;
 
+import com.facebook.react.bridge.Promise;
+import com.facebook.react.bridge.ReactApplicationContext;
+import com.facebook.react.bridge.ReactContextBaseJavaModule;
+import com.facebook.react.bridge.ReactMethod;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
+import java.security.MessageDigest;
+import java.security.SecureRandom;
 
-public class Util {
+public class Util extends ReactContextBaseJavaModule {
+
+     public Util(ReactApplicationContext reactContext) {
+        super(reactContext);
+    }
+
+    @Override
+    public String getName() {
+        return "Shared";
+    }
+
+    @ReactMethod
+    public void calculateFileChecksum(String filePath, Promise promise) {
+        try {
+            String result = calculateFileChecksum(getReactApplicationContext(),filePath );
+            promise.resolve(result);
+        } catch (Exception e) {
+            promise.reject("-1", e.getMessage());
+        }
+    }
+
+    @ReactMethod
+    public void getRandomValues(int length, Promise promise) {
+        try {
+            String result = getRandomValues(length);
+            promise.resolve(result);
+        } catch (Exception e) {
+            promise.reject("-1", e.getMessage());
+        }
+    }
+
     public static String bytesToHex(byte[] bytes) {
         final char[] hexArray = "0123456789abcdef".toCharArray();
         char[] hexChars = new char[bytes.length * 2];
@@ -38,5 +75,28 @@ public class Util {
         } else {
             return new FileInputStream(new File(inputFile)); // Handle plain file paths
         }
+    }
+
+    public static String calculateFileChecksum(Context context, String filePath) throws Exception {
+        InputStream inputStream = getInputStream(context, filePath);
+        MessageDigest digest = MessageDigest.getInstance("SHA-256");
+        byte[] buffer = new byte[4096];
+        int bytesRead;
+        while ((bytesRead = inputStream.read(buffer)) != -1) {
+            digest.update(buffer, 0, bytesRead);
+        }
+        inputStream.close();
+        byte[] hash = digest.digest();
+        return bytesToHex(hash);
+    }
+
+    public static String getRandomValues(int length) {
+        final String alphanumericChars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+        SecureRandom random = new SecureRandom();
+        StringBuilder sb = new StringBuilder(length);
+        for (int i = 0; i < length; i++) {
+            sb.append(alphanumericChars.charAt(random.nextInt(alphanumericChars.length())));
+        }
+        return sb.toString();
     }
 }

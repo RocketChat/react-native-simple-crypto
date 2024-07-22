@@ -21,7 +21,8 @@ public class RCTCryptoPackage implements ReactPackage {
                 new RCTPbkdf2(reactContext),
                 new RCTRsa(reactContext),
                 new RCTRsaUtils(reactContext),
-                new RandomBytesModule(reactContext)
+                new RandomBytesModule(reactContext),
+                new Util(reactContext)
         );
     }
 

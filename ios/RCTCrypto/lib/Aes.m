@@ -55,7 +55,7 @@
 
     NSString *normalizedFilePath = [filePath stringByReplacingOccurrencesOfString:@"file://" withString:@""];
     NSString *outputFileName = [@"processed_" stringByAppendingString:[normalizedFilePath lastPathComponent]];
-    NSString *outputFilePath = [[[normalizedFilePath stringByDeletingLastPathComponent] stringByAppendingPathComponent:outputFileName] stringByDeletingPathExtension];
+    NSString *outputFilePath = [[normalizedFilePath stringByDeletingLastPathComponent] stringByAppendingPathComponent:outputFileName];
     NSInputStream *inputStream = [NSInputStream inputStreamWithFileAtPath:normalizedFilePath];
     NSOutputStream *outputStream = [NSOutputStream outputStreamToFileAtPath:outputFilePath append:NO];
     [inputStream open];
@@ -67,6 +67,8 @@
     CCCryptorStatus status = CCCryptorCreateWithMode(operation, kCCModeCTR, kCCAlgorithmAES, ccNoPadding, ivData.bytes, keyData.bytes, keyData.length, NULL, 0, 0, kCCModeOptionCTR_BE, &cryptor);
     if (status != kCCSuccess) {
         NSLog(@"Failed to create cryptor: %d", status);
+        [inputStream close];
+        [outputStream close];
         return nil;
     }
 
@@ -79,8 +81,25 @@
                 [outputStream write:buffer maxLength:dataOutMoved];
             } else {
                 NSLog(@"Cryptor update failed: %d", status);
+                return nil;
                 break;
             }
+        } else if (bytesRead < 0) {
+            NSLog(@"Input stream read error");
+            status = kCCDecodeError;
+            return nil;
+            break;
+        }
+    }
+
+    if (status == kCCSuccess) {
+        size_t finalBytesOut;
+        status = CCCryptorFinal(cryptor, buffer, bufferSize, &finalBytesOut);
+        if (status == kCCSuccess) {
+            [outputStream write:buffer maxLength:finalBytesOut];
+        } else {
+            NSLog(@"Cryptor final failed: %d", status);
+            return nil;
         }
     }
 
@@ -89,22 +108,26 @@
     [outputStream close];
 
     if (status == kCCSuccess) {
-        if (operation == kCCDecrypt) {
-            NSFileManager *fileManager = [NSFileManager defaultManager];
-            // Overwrite the input file with the decrypted file
-            [fileManager removeItemAtPath:normalizedFilePath error:nil];
-            [fileManager moveItemAtPath:outputFilePath toPath:normalizedFilePath error:nil];
-            return [NSString stringWithFormat:@"file://%@", normalizedFilePath];
-        } else {
-            return [NSString stringWithFormat:@"file://%@", outputFilePath];
+        NSURL *originalFileURL = [NSURL fileURLWithPath:normalizedFilePath];
+        NSURL *outputFileURL = [NSURL fileURLWithPath:outputFilePath];
+        NSError *error = nil;
+        [[NSFileManager defaultManager] replaceItemAtURL:originalFileURL
+                                          withItemAtURL:outputFileURL
+                                         backupItemName:nil
+                                                options:NSFileManagerItemReplacementUsingNewMetadataOnly
+                                       resultingItemURL:nil
+                                                  error:&error];
+        if (error) {
+            NSLog(@"Failed to replace original file: %@", error);
+            return nil;
         }
+        return [NSString stringWithFormat:@"file://%@", normalizedFilePath];
     } else {
         // Clean up temp file in case of failure
         [[NSFileManager defaultManager] removeItemAtPath:outputFilePath error:nil];
         return nil;
     }
 }
-
 
 + (NSString *)encryptFile:(NSString *)filePath key:(NSString *)key iv:(NSString *)iv {
     return [self processFile:filePath operation:kCCEncrypt key:key iv:iv];
