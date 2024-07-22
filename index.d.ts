@@ -18,6 +18,16 @@ declare module "react-native-simple-crypto" {
       key: ArrayBuffer,
       iv: ArrayBuffer
     ): Promise<ArrayBuffer>;
+    export function encryptFile(
+      filePath: string,
+      key: string,
+      iv: string
+    ): Promise<string>;
+    export function decryptFile(
+      filePath: string,
+      key: string,
+      iv: string
+    ): Promise<string>;
   }
 
   export namespace SHA {
