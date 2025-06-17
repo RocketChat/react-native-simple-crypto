@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import {
-  View,
   Text,
   StyleSheet,
   ScrollView,
   NativeModules,
+  Platform,
 } from 'react-native';
 import SimpleCrypto from 'react-native-simple-crypto';
 
@@ -22,6 +22,7 @@ const SHA_MESSAGE = 'Hello, SHA!';
 const RANDOM_BYTES_LENGTH = 16;
 const HMAC_MESSAGE = 'Hello, HMAC!';
 const HMAC_KEY = 'supersecretkey';
+const SHARED_RANDOM_LENGTH = 16;
 
 function hexToArrayBuffer(hex: string) {
   return SimpleCrypto.utils.convertHexToArrayBuffer(hex);
@@ -50,6 +51,10 @@ export default function App() {
   const [randomBytesError, setRandomBytesError] = useState('');
   const [hmac256, setHmac256] = useState('');
   const [hmacError, setHmacError] = useState('');
+  const [sharedRandom, setSharedRandom] = useState('');
+  const [sharedRandomError, setSharedRandomError] = useState('');
+  const [sharedChecksum, setSharedChecksum] = useState('');
+  const [sharedChecksumError, setSharedChecksumError] = useState('');
 
   useEffect(() => {
     async function testAES() {
@@ -107,7 +112,6 @@ export default function App() {
     async function testRSA() {
       try {
         // Generate key pair
-        console.log(NativeModules.RsaUtils);
         const keyPair = await SimpleCrypto.RSA.generateKeys(RSA_KEY_SIZE);
         setRsaPublicKey(keyPair.public);
         setRsaPrivateKey(keyPair.private);
@@ -177,6 +181,54 @@ export default function App() {
       }
     }
     testHMAC();
+
+    async function testRCTShared() {
+      // getRandomValues
+      try {
+        if (NativeModules.Shared && NativeModules.Shared.getRandomValues) {
+          const random = await NativeModules.Shared.getRandomValues(
+            SHARED_RANDOM_LENGTH,
+          );
+          setSharedRandom(random);
+        } else {
+          setSharedRandomError(
+            'NativeModules.Shared.getRandomValues not found',
+          );
+        }
+      } catch (e) {
+        const err = e as Error;
+        setSharedRandomError(err.message || String(e));
+      }
+
+      try {
+        if (Platform.OS === 'ios') {
+          const filePath = await NativeModules.ResourcePath.getResourcePath(
+            'Info',
+            'plist',
+          );
+          if (!filePath) {
+            setSharedChecksumError('Info.plist not found in bundle');
+            return;
+          }
+          const checksum = await NativeModules.Shared.calculateFileChecksum(
+            filePath,
+          );
+          setSharedChecksum(checksum);
+        } else if (Platform.OS === 'android') {
+          setSharedChecksumError(
+            'Checksum test not implemented for Android in this example.',
+          );
+        } else {
+          setSharedChecksumError(
+            'NativeModules.Shared.calculateFileChecksum or ResourcePath not found',
+          );
+        }
+      } catch (e) {
+        const err = e as Error;
+        setSharedChecksumError(err.message || String(e));
+      }
+    }
+    testRCTShared();
   }, []);
 
   useEffect(() => {
@@ -288,6 +340,22 @@ export default function App() {
       <Text style={styles.value}>{hmac256}</Text>
       {hmacError ? (
         <Text style={styles.error}>HMAC Error: {hmacError}</Text>
+      ) : null}
+
+      <Text style={[styles.title, { marginTop: 40 }]}>RCTShared Example</Text>
+      <Text style={styles.label}>getRandomValues({SHARED_RANDOM_LENGTH}):</Text>
+      <Text style={styles.value}>{sharedRandom}</Text>
+      {sharedRandomError ? (
+        <Text style={styles.error}>
+          RCTShared Random Error: {sharedRandomError}
+        </Text>
+      ) : null}
+      <Text style={styles.label}>calculateFileChecksum (Info.plist):</Text>
+      <Text style={styles.value}>{sharedChecksum}</Text>
+      {sharedChecksumError ? (
+        <Text style={styles.error}>
+          RCTShared Checksum Error: {sharedChecksumError}
+        </Text>
       ) : null}
     </ScrollView>
   );

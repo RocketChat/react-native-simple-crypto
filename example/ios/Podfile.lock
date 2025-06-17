@@ -1649,7 +1649,7 @@ PODS:
     - React-RCTFBReactNativeSpec
     - ReactCommon/turbomodule/core
     - SocketRocket
-  - react-native-simple-crypto (0.6.0):
+  - react-native-simple-crypto (0.6.2):
     - OpenSSL-Universal (= 1.1.1100)
     - React
   - React-NativeModulesApple (0.80.0):
@@ -2402,7 +2402,7 @@ SPEC CHECKSUMS:
   React-logger: b69e65dc60f768e5509ac0cc27a360124bf70478
   React-Mapbuffer: b48f9f3311fd0ec0f7a5dc39d707eff521fb5f38
   React-microtasksnativemodule: d8568d0485a350c720c061ae835e09fc88c28715
-  react-native-simple-crypto: 83eb246059b5bfce7e6a96bf24569a0a98e92d74
+  react-native-simple-crypto: da12f3be4594842e87e757d8d120a18b5520e492
   React-NativeModulesApple: f10596688a03af66804cfbe61792be24a7888da8
   React-oscompat: 7c0a341cc31e350da71ddf2e46de0a845d1d1626
   React-perflogger: 4cc44451f694d6205f47bd8d5d87c9c862c3335c
