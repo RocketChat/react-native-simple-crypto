@@ -1,4 +1,4 @@
-declare module "react-native-simple-crypto" {
+declare module 'react-native-simple-crypto' {
   interface PublicKey {
     public: string;
   }
@@ -52,7 +52,7 @@ declare module "react-native-simple-crypto" {
       salt: string | ArrayBuffer,
       iterations: number,
       keyLen: number,
-      algorithm: "SHA1" | "SHA224" | "SHA256" | "SHA384" | "SHA512"
+      algorithm: 'SHA1' | 'SHA224' | 'SHA256' | 'SHA384' | 'SHA512'
     ): Promise<ArrayBuffer>;
   }
 
@@ -65,18 +65,20 @@ declare module "react-native-simple-crypto" {
     export function sign(
       data: string,
       key: string,
-      hash: "Raw" | "SHA1" | "SHA224" | "SHA256" | "SHA384" | "SHA512"
+      hash: 'Raw' | 'SHA1' | 'SHA224' | 'SHA256' | 'SHA384' | 'SHA512'
     ): Promise<string>;
     export function verify(
       data: string,
       secretToVerify: string,
       key: string,
-      hash: "Raw" | "SHA1" | "SHA224" | "SHA256" | "SHA384" | "SHA512"
+      hash: 'Raw' | 'SHA1' | 'SHA224' | 'SHA256' | 'SHA384' | 'SHA512'
     ): Promise<boolean>;
   }
 
   export namespace utils {
     export function randomBytes(bytes: number): Promise<ArrayBuffer>;
+    export function calculateFileChecksum(filePath: string): Promise<string>;
+    export function getRandomValues(length: number): Promise<string>;
     export function convertArrayBufferToUtf8(input: ArrayBuffer): string;
     export function convertUtf8ToArrayBuffer(input: string): ArrayBuffer;
     export function convertArrayBufferToBase64(input: ArrayBuffer): string;

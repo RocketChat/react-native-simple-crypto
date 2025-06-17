@@ -1,8 +1,8 @@
-'use strict';
+"use strict";
 
-import base64js from 'base64-js';
-import hexLite from 'hex-lite';
-import { NativeModules } from 'react-native';
+import base64js from "base64-js";
+import hexLite from "hex-lite";
+import { NativeModules } from "react-native";
 
 function convertArrayBufferToUtf8(arrayBuffer) {
   const array = new Uint8Array(arrayBuffer);
@@ -23,15 +23,15 @@ function convertArrayBufferToUtf8(arrayBuffer) {
       chars.push(
         String.fromCharCode(
           ((byte & 0x0f) << 12) |
-          ((array[i + 1] & 0x3f) << 6) |
-          (array[i + 2] & 0x3f)
+            ((array[i + 1] & 0x3f) << 6) |
+            (array[i + 2] & 0x3f)
         )
       );
       i += 3;
     }
   }
 
-  return chars.join('');
+  return chars.join("");
 }
 
 function convertUtf8ToArrayBuffer(utf8) {
@@ -66,11 +66,21 @@ const convertArrayBufferToHex = hexLite.fromBuffer;
 const convertHexToArrayBuffer = hexLite.toBuffer;
 
 async function randomBytes(length) {
-  return convertBase64ToArrayBuffer(await NativeModules.RNRandomBytes.randomBytes(length));
+  return convertBase64ToArrayBuffer(
+    await NativeModules.RNRandomBytes.randomBytes(length)
+  );
+}
+
+async function calculateFileChecksum(filePath) {
+  return NativeModules.Shared.calculateFileChecksum(filePath);
+}
+
+async function getRandomValues(length) {
+  return NativeModules.Shared.getRandomValues(length);
 }
 
 async function SHAWrapper(data, algorithm) {
-  if (typeof data === 'string') {
+  if (typeof data === "string") {
     return NativeModules.Sha.shaUtf8(data, algorithm);
   } else {
     const dataBase64 = convertArrayBufferToBase64(data);
@@ -85,26 +95,34 @@ const AES = {
     const textBase64 = convertArrayBufferToBase64(textArrayBuffer);
     const keyHex = convertArrayBufferToHex(keyArrayBuffer);
     const ivHex = convertArrayBufferToHex(ivArrayBuffer);
-    return convertBase64ToArrayBuffer(await NativeModules.Aes.encrypt(textBase64, keyHex, ivHex));
+    return convertBase64ToArrayBuffer(
+      await NativeModules.Aes.encrypt(textBase64, keyHex, ivHex)
+    );
   },
-  decrypt: async function (cipherTextArrayBuffer, keyArrayBuffer, ivArrayBuffer) {
+  decrypt: async function (
+    cipherTextArrayBuffer,
+    keyArrayBuffer,
+    ivArrayBuffer
+  ) {
     const cipherTextBase64 = convertArrayBufferToBase64(cipherTextArrayBuffer);
     const keyHex = convertArrayBufferToHex(keyArrayBuffer);
     const ivHex = convertArrayBufferToHex(ivArrayBuffer);
-    return convertBase64ToArrayBuffer(await NativeModules.Aes.decrypt(cipherTextBase64, keyHex, ivHex));
+    return convertBase64ToArrayBuffer(
+      await NativeModules.Aes.decrypt(cipherTextBase64, keyHex, ivHex)
+    );
   },
   encryptFile: async function (filePath, key, iv) {
     return NativeModules.Aes.encryptFile(filePath, key, iv);
   },
   decryptFile: async function (filePath, key, iv) {
     return NativeModules.Aes.decryptFile(filePath, key, iv);
-  }
+  },
 };
 
 const SHA = {
-  sha1: data => SHAWrapper(data, 'SHA-1'),
-  sha256: data => SHAWrapper(data, 'SHA-256'),
-  sha512: data => SHAWrapper(data, 'SHA-512')
+  sha1: (data) => SHAWrapper(data, "SHA-1"),
+  sha256: (data) => SHAWrapper(data, "SHA-256"),
+  sha512: (data) => SHAWrapper(data, "SHA-512"),
 };
 
 const HMAC = {
@@ -113,7 +131,7 @@ const HMAC = {
     const keyHex = convertArrayBufferToHex(keyArrayBuffer);
     const signatureHex = await NativeModules.Hmac.hmac256(textHex, keyHex);
     return convertHexToArrayBuffer(signatureHex);
-  }
+  },
 };
 
 const PBKDF2 = {
@@ -121,11 +139,11 @@ const PBKDF2 = {
     let passwordToHash = password;
     let saltToHash = salt;
 
-    if (typeof password === 'string') {
+    if (typeof password === "string") {
       passwordToHash = convertUtf8ToArrayBuffer(password);
     }
 
-    if (typeof salt === 'string') {
+    if (typeof salt === "string") {
       saltToHash = convertUtf8ToArrayBuffer(salt);
     }
 
@@ -138,7 +156,7 @@ const PBKDF2 = {
     );
 
     return convertBase64ToArrayBuffer(digest);
-  }
+  },
 };
 
 const RSA = {
@@ -149,17 +167,19 @@ const RSA = {
   decrypt: (data, key) => NativeModules.Rsa.decrypt(data, key),
   sign: (data, key, hash) => NativeModules.Rsa.sign(data, key, hash),
   verify: (data, secretToVerify, key, hash) =>
-    NativeModules.Rsa.verify(data, secretToVerify, key, hash)
+    NativeModules.Rsa.verify(data, secretToVerify, key, hash),
 };
 
 const utils = {
   randomBytes,
+  calculateFileChecksum,
+  getRandomValues,
   convertArrayBufferToUtf8,
   convertUtf8ToArrayBuffer,
   convertArrayBufferToBase64,
   convertBase64ToArrayBuffer,
   convertArrayBufferToHex,
-  convertHexToArrayBuffer
+  convertHexToArrayBuffer,
 };
 
 export default {
@@ -168,5 +188,5 @@ export default {
   HMAC,
   PBKDF2,
   RSA,
-  utils
+  utils,
 };
