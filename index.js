@@ -23,8 +23,8 @@ function convertArrayBufferToUtf8(arrayBuffer) {
       chars.push(
         String.fromCharCode(
           ((byte & 0x0f) << 12) |
-          ((array[i + 1] & 0x3f) << 6) |
-          (array[i + 2] & 0x3f)
+            ((array[i + 1] & 0x3f) << 6) |
+            (array[i + 2] & 0x3f)
         )
       );
       i += 3;
@@ -66,7 +66,17 @@ const convertArrayBufferToHex = hexLite.fromBuffer;
 const convertHexToArrayBuffer = hexLite.toBuffer;
 
 async function randomBytes(length) {
-  return convertBase64ToArrayBuffer(await NativeModules.RNRandomBytes.randomBytes(length));
+  return convertBase64ToArrayBuffer(
+    await NativeModules.RNRandomBytes.randomBytes(length)
+  );
+}
+
+async function calculateFileChecksum(filePath) {
+  return NativeModules.Shared.calculateFileChecksum(filePath);
+}
+
+async function getRandomValues(length) {
+  return NativeModules.Shared.getRandomValues(length);
 }
 
 async function SHAWrapper(data, algorithm) {
@@ -85,26 +95,34 @@ const AES = {
     const textBase64 = convertArrayBufferToBase64(textArrayBuffer);
     const keyHex = convertArrayBufferToHex(keyArrayBuffer);
     const ivHex = convertArrayBufferToHex(ivArrayBuffer);
-    return convertBase64ToArrayBuffer(await NativeModules.Aes.encrypt(textBase64, keyHex, ivHex));
+    return convertBase64ToArrayBuffer(
+      await NativeModules.Aes.encrypt(textBase64, keyHex, ivHex)
+    );
   },
-  decrypt: async function (cipherTextArrayBuffer, keyArrayBuffer, ivArrayBuffer) {
+  decrypt: async function (
+    cipherTextArrayBuffer,
+    keyArrayBuffer,
+    ivArrayBuffer
+  ) {
     const cipherTextBase64 = convertArrayBufferToBase64(cipherTextArrayBuffer);
     const keyHex = convertArrayBufferToHex(keyArrayBuffer);
     const ivHex = convertArrayBufferToHex(ivArrayBuffer);
-    return convertBase64ToArrayBuffer(await NativeModules.Aes.decrypt(cipherTextBase64, keyHex, ivHex));
+    return convertBase64ToArrayBuffer(
+      await NativeModules.Aes.decrypt(cipherTextBase64, keyHex, ivHex)
+    );
   },
   encryptFile: async function (filePath, key, iv) {
     return NativeModules.Aes.encryptFile(filePath, key, iv);
   },
   decryptFile: async function (filePath, key, iv) {
     return NativeModules.Aes.decryptFile(filePath, key, iv);
-  }
+  },
 };
 
 const SHA = {
-  sha1: data => SHAWrapper(data, 'SHA-1'),
-  sha256: data => SHAWrapper(data, 'SHA-256'),
-  sha512: data => SHAWrapper(data, 'SHA-512')
+  sha1: (data) => SHAWrapper(data, 'SHA-1'),
+  sha256: (data) => SHAWrapper(data, 'SHA-256'),
+  sha512: (data) => SHAWrapper(data, 'SHA-512'),
 };
 
 const HMAC = {
@@ -113,7 +131,7 @@ const HMAC = {
     const keyHex = convertArrayBufferToHex(keyArrayBuffer);
     const signatureHex = await NativeModules.Hmac.hmac256(textHex, keyHex);
     return convertHexToArrayBuffer(signatureHex);
-  }
+  },
 };
 
 const PBKDF2 = {
@@ -138,22 +156,24 @@ const PBKDF2 = {
     );
 
     return convertBase64ToArrayBuffer(digest);
-  }
+  },
 };
 
 const RSA = {
   ...NativeModules.Rsa,
-  ...NativeModules.RsaUtils
+  ...NativeModules.RsaUtils,
 };
 
 const utils = {
   randomBytes,
+  calculateFileChecksum,
+  getRandomValues,
   convertArrayBufferToUtf8,
   convertUtf8ToArrayBuffer,
   convertArrayBufferToBase64,
   convertBase64ToArrayBuffer,
   convertArrayBufferToHex,
-  convertHexToArrayBuffer
+  convertHexToArrayBuffer,
 };
 
 export default {
@@ -162,5 +182,5 @@ export default {
   HMAC,
   PBKDF2,
   RSA,
-  utils
+  utils,
 };
