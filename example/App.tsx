@@ -1,5 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  NativeModules,
+} from 'react-native';
 import SimpleCrypto from 'react-native-simple-crypto';
 
 const PLAINTEXT = 'Hello, AES encryption!';
@@ -101,6 +107,7 @@ export default function App() {
     async function testRSA() {
       try {
         // Generate key pair
+        console.log(NativeModules.RsaUtils);
         const keyPair = await SimpleCrypto.RSA.generateKeys(RSA_KEY_SIZE);
         setRsaPublicKey(keyPair.public);
         setRsaPrivateKey(keyPair.private);
@@ -124,26 +131,6 @@ export default function App() {
       }
     }
     testRSA();
-
-    async function testRSAUtils(publicKey: string) {
-      try {
-        // Export public key to JWK
-        const jwk = await SimpleCrypto.RSA.exportKey(publicKey);
-        setRsaJwk(JSON.stringify(jwk, null, 2));
-
-        // Import JWK back to PEM
-        const importedPem = await SimpleCrypto.RSA.importKey(jwk);
-        setRsaImportedPem(importedPem);
-      } catch (e) {
-        const err = e as Error;
-        setRsaUtilsError(err.message || String(e));
-      }
-    }
-
-    // Only run RSA Utils test after RSA key is generated
-    if (rsaPublicKey) {
-      testRSAUtils(rsaPublicKey);
-    }
 
     async function testSHA() {
       try {
@@ -191,6 +178,28 @@ export default function App() {
     }
     testHMAC();
   }, []);
+
+  useEffect(() => {
+    async function testRSAUtils(publicKey: string) {
+      try {
+        // Export public key to JWK
+        const jwk = await SimpleCrypto.RSA.exportKey(publicKey);
+        setRsaJwk(JSON.stringify(jwk, null, 2));
+
+        // Import JWK back to PEM
+        const importedPem = await SimpleCrypto.RSA.importKey(jwk);
+        setRsaImportedPem(importedPem);
+      } catch (e) {
+        const err = e as Error;
+        setRsaUtilsError(err.message || String(e));
+      }
+    }
+
+    // Only run RSA Utils test after RSA key is generated
+    if (rsaPublicKey) {
+      testRSAUtils(rsaPublicKey);
+    }
+  }, [rsaPublicKey]);
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
@@ -290,6 +299,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 24,
+    marginTop: 50,
     backgroundColor: '#fff',
   },
   title: {

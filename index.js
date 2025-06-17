@@ -142,8 +142,14 @@ const PBKDF2 = {
 };
 
 const RSA = {
-  ...NativeModules.Rsa,
-  ...NativeModules.RsaUtils
+  generateKeys: (keySize) => NativeModules.Rsa.generateKeys(keySize),
+  importKey: (jwk) => NativeModules.RsaUtils.importKey(jwk),
+  exportKey: (pkcs1) => NativeModules.RsaUtils.exportKey(pkcs1),
+  encrypt: (data, key) => NativeModules.Rsa.encrypt(data, key),
+  decrypt: (data, key) => NativeModules.Rsa.decrypt(data, key),
+  sign: (data, key, hash) => NativeModules.Rsa.sign(data, key, hash),
+  verify: (data, secretToVerify, key, hash) =>
+    NativeModules.Rsa.verify(data, secretToVerify, key, hash)
 };
 
 const utils = {
