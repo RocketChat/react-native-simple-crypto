@@ -12,6 +12,10 @@ const PBKDF2_KEYLEN = 32; // 32 bytes = 256 bits
 const PBKDF2_ALGORITHM = 'SHA256';
 const RSA_MESSAGE = 'Hello, RSA!';
 const RSA_KEY_SIZE = 2048;
+const SHA_MESSAGE = 'Hello, SHA!';
+const RANDOM_BYTES_LENGTH = 16;
+const HMAC_MESSAGE = 'Hello, HMAC!';
+const HMAC_KEY = 'supersecretkey';
 
 function hexToArrayBuffer(hex: string) {
   return SimpleCrypto.utils.convertHexToArrayBuffer(hex);
@@ -31,6 +35,15 @@ export default function App() {
   const [rsaJwk, setRsaJwk] = useState('');
   const [rsaImportedPem, setRsaImportedPem] = useState('');
   const [rsaUtilsError, setRsaUtilsError] = useState('');
+  const [sha1, setSha1] = useState('');
+  const [sha256, setSha256] = useState('');
+  const [sha512, setSha512] = useState('');
+  const [shaError, setShaError] = useState('');
+  const [randomBytesHex, setRandomBytesHex] = useState('');
+  const [randomBytesBase64, setRandomBytesBase64] = useState('');
+  const [randomBytesError, setRandomBytesError] = useState('');
+  const [hmac256, setHmac256] = useState('');
+  const [hmacError, setHmacError] = useState('');
 
   useEffect(() => {
     async function testAES() {
@@ -131,6 +144,52 @@ export default function App() {
     if (rsaPublicKey) {
       testRSAUtils(rsaPublicKey);
     }
+
+    async function testSHA() {
+      try {
+        const sha1Hash = await SimpleCrypto.SHA.sha1(SHA_MESSAGE);
+        setSha1(sha1Hash);
+        const sha256Hash = await SimpleCrypto.SHA.sha256(SHA_MESSAGE);
+        setSha256(sha256Hash);
+        const sha512Hash = await SimpleCrypto.SHA.sha512(SHA_MESSAGE);
+        setSha512(sha512Hash);
+      } catch (e) {
+        const err = e as Error;
+        setShaError(err.message || String(e));
+      }
+    }
+    testSHA();
+
+    async function testRandomBytes() {
+      try {
+        const bytes = await SimpleCrypto.utils.randomBytes(RANDOM_BYTES_LENGTH);
+        setRandomBytesHex(SimpleCrypto.utils.convertArrayBufferToHex(bytes));
+        setRandomBytesBase64(
+          SimpleCrypto.utils.convertArrayBufferToBase64(bytes),
+        );
+      } catch (e) {
+        const err = e as Error;
+        setRandomBytesError(err.message || String(e));
+      }
+    }
+    testRandomBytes();
+
+    async function testHMAC() {
+      try {
+        const messageBuffer =
+          SimpleCrypto.utils.convertUtf8ToArrayBuffer(HMAC_MESSAGE);
+        const keyBuffer = SimpleCrypto.utils.convertUtf8ToArrayBuffer(HMAC_KEY);
+        const hmacBuffer = await SimpleCrypto.HMAC.hmac256(
+          messageBuffer,
+          keyBuffer,
+        );
+        setHmac256(SimpleCrypto.utils.convertArrayBufferToHex(hmacBuffer));
+      } catch (e) {
+        const err = e as Error;
+        setHmacError(err.message || String(e));
+      }
+    }
+    testHMAC();
   }, []);
 
   return (
@@ -183,6 +242,43 @@ export default function App() {
       <Text style={styles.value}>{rsaImportedPem}</Text>
       {rsaUtilsError ? (
         <Text style={styles.error}>RSA Utils Error: {rsaUtilsError}</Text>
+      ) : null}
+
+      <Text style={[styles.title, { marginTop: 40 }]}>SHA Example</Text>
+      <Text style={styles.label}>Original Message:</Text>
+      <Text style={styles.value}>{SHA_MESSAGE}</Text>
+      <Text style={styles.label}>SHA-1:</Text>
+      <Text style={styles.value}>{sha1}</Text>
+      <Text style={styles.label}>SHA-256:</Text>
+      <Text style={styles.value}>{sha256}</Text>
+      <Text style={styles.label}>SHA-512:</Text>
+      <Text style={styles.value}>{sha512}</Text>
+      {shaError ? (
+        <Text style={styles.error}>SHA Error: {shaError}</Text>
+      ) : null}
+
+      <Text style={[styles.title, { marginTop: 40 }]}>
+        Random Bytes Example
+      </Text>
+      <Text style={styles.label}>Length:</Text>
+      <Text style={styles.value}>{RANDOM_BYTES_LENGTH}</Text>
+      <Text style={styles.label}>Random Bytes (Hex):</Text>
+      <Text style={styles.value}>{randomBytesHex}</Text>
+      <Text style={styles.label}>Random Bytes (Base64):</Text>
+      <Text style={styles.value}>{randomBytesBase64}</Text>
+      {randomBytesError ? (
+        <Text style={styles.error}>Random Bytes Error: {randomBytesError}</Text>
+      ) : null}
+
+      <Text style={[styles.title, { marginTop: 40 }]}>HMAC Example</Text>
+      <Text style={styles.label}>Message:</Text>
+      <Text style={styles.value}>{HMAC_MESSAGE}</Text>
+      <Text style={styles.label}>Key:</Text>
+      <Text style={styles.value}>{HMAC_KEY}</Text>
+      <Text style={styles.label}>HMAC-SHA256 (Hex):</Text>
+      <Text style={styles.value}>{hmac256}</Text>
+      {hmacError ? (
+        <Text style={styles.error}>HMAC Error: {hmacError}</Text>
       ) : null}
     </ScrollView>
   );
