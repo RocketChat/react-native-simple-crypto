@@ -1,8 +1,8 @@
-'use strict';
+"use strict";
 
-import base64js from 'base64-js';
-import hexLite from 'hex-lite';
-import { NativeModules } from 'react-native';
+import base64js from "base64-js";
+import hexLite from "hex-lite";
+import { NativeModules } from "react-native";
 
 function convertArrayBufferToUtf8(arrayBuffer) {
   const array = new Uint8Array(arrayBuffer);
@@ -31,7 +31,7 @@ function convertArrayBufferToUtf8(arrayBuffer) {
     }
   }
 
-  return chars.join('');
+  return chars.join("");
 }
 
 function convertUtf8ToArrayBuffer(utf8) {
@@ -80,7 +80,7 @@ async function getRandomValues(length) {
 }
 
 async function SHAWrapper(data, algorithm) {
-  if (typeof data === 'string') {
+  if (typeof data === "string") {
     return NativeModules.Sha.shaUtf8(data, algorithm);
   } else {
     const dataBase64 = convertArrayBufferToBase64(data);
@@ -120,9 +120,9 @@ const AES = {
 };
 
 const SHA = {
-  sha1: (data) => SHAWrapper(data, 'SHA-1'),
-  sha256: (data) => SHAWrapper(data, 'SHA-256'),
-  sha512: (data) => SHAWrapper(data, 'SHA-512'),
+  sha1: (data) => SHAWrapper(data, "SHA-1"),
+  sha256: (data) => SHAWrapper(data, "SHA-256"),
+  sha512: (data) => SHAWrapper(data, "SHA-512"),
 };
 
 const HMAC = {
@@ -139,11 +139,11 @@ const PBKDF2 = {
     let passwordToHash = password;
     let saltToHash = salt;
 
-    if (typeof password === 'string') {
+    if (typeof password === "string") {
       passwordToHash = convertUtf8ToArrayBuffer(password);
     }
 
-    if (typeof salt === 'string') {
+    if (typeof salt === "string") {
       saltToHash = convertUtf8ToArrayBuffer(salt);
     }
 
@@ -160,8 +160,14 @@ const PBKDF2 = {
 };
 
 const RSA = {
-  ...NativeModules.Rsa,
-  ...NativeModules.RsaUtils,
+  generateKeys: (keySize) => NativeModules.Rsa.generateKeys(keySize),
+  importKey: (jwk) => NativeModules.RsaUtils.importKey(jwk),
+  exportKey: (pkcs1) => NativeModules.RsaUtils.exportKey(pkcs1),
+  encrypt: (data, key) => NativeModules.Rsa.encrypt(data, key),
+  decrypt: (data, key) => NativeModules.Rsa.decrypt(data, key),
+  sign: (data, key, hash) => NativeModules.Rsa.sign(data, key, hash),
+  verify: (data, secretToVerify, key, hash) =>
+    NativeModules.Rsa.verify(data, secretToVerify, key, hash),
 };
 
 const utils = {
